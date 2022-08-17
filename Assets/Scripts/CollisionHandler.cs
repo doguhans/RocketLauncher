@@ -3,9 +3,44 @@ using UnityEngine.SceneManagement;
 
 public class CollisionHandler : MonoBehaviour
 {
-    [SerializeField]float delay = 1f;
-    private void OnCollisionEnter(Collision other) 
+    [SerializeField] float restartLevelDelay = 1f;
+    [SerializeField] float levelPassDelay = 2.5f;
+    [SerializeField] AudioClip rocketCrash, levelPass;
+    [SerializeField] ParticleSystem crashParticles, levelPassParticles;
+
+    AudioSource aS;
+    
+
+    bool isTransitioning = false;
+    bool collisionDisabled = false;
+    void Start() 
     {
+        aS = GetComponent<AudioSource>();
+               
+    }
+
+    void Update()
+    {
+        RespondToDebugKeys();
+    }
+
+    void RespondToDebugKeys()
+    {
+        if(Input.GetKey(KeyCode.L))
+        {
+           LoadNextLevel();
+        }
+        else if(Input.GetKey(KeyCode.C))
+        {
+            collisionDisabled = !collisionDisabled;
+        }
+    }
+     void OnCollisionEnter(Collision other) 
+    {  
+        if(isTransitioning || collisionDisabled){ return; }
+
+        else if(isTransitioning== false)
+        {
         switch (other.gameObject.tag)
         {
             case "Friendly":
@@ -24,20 +59,32 @@ public class CollisionHandler : MonoBehaviour
             StartCrashSequence();
             break;
         }
+        }
     }
 
     void LevelPassSequence()
     {
-        Debug.Log("Congratulations!!!");
+        isTransitioning=true;                                    // Debug.Log("Congratulations!!!");
+
+        aS.Stop();
+        levelPassParticles.Play();
+        aS.PlayOneShot(levelPass);
+        
         GetComponent<Movement>().enabled=false;
-        Invoke("LoadNextLevel", delay);
+        Invoke("LoadNextLevel", levelPassDelay);
     }
 
     void StartCrashSequence()
     {
-        Debug.Log("You've crashed.");
+        isTransitioning=true;       // Debug.Log("You've crashed.");
+
+        aS.Stop();
+        crashParticles.Play();
+        aS.PlayOneShot(rocketCrash);
+
+    
         GetComponent<Movement>().enabled= false;
-        Invoke("ReloadLevel", delay);
+        Invoke("ReloadLevel", restartLevelDelay);
 
     }
 

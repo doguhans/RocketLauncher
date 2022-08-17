@@ -4,8 +4,20 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
+    //PARAMETERS - for tuning, typically set in the editor
+    
+    //CACHE - e.g. regerences for readability or speed
+
+    //STATE - private instance (member) variables
     [SerializeField] float mainThrust= 1000f;
     [SerializeField] float sideThrust= 100f;
+    [SerializeField] AudioClip mainEngine;
+
+    [SerializeField] ParticleSystem mainEngineParticles;
+
+    [SerializeField] ParticleSystem leftThrusterParticles;
+    [SerializeField] ParticleSystem rightThrusterParticles;
+
     Rigidbody rb ;
     AudioSource audioSource;
     
@@ -30,17 +42,27 @@ public class Movement : MonoBehaviour
     {
         if(Input.GetKey(KeyCode.Space))
         {
-        // Debug.Log("Pressed Space!! Thrusting through SPACE...");        // float yAxis= Time.deltaTime * speed;        // transform.Translate(0,yAxis,0);
-        
-        rb.AddRelativeForce(Vector3.up* mainThrust* Time.deltaTime);
-        if(!audioSource.isPlaying)
-        { 
-            audioSource.Play();
-        }
+            StartTrusting();
         }
         else
         {
             audioSource.Stop();
+            mainEngineParticles.Stop();
+        }
+    }
+
+    void StartTrusting()
+    {
+        // Debug.Log("Pressed Space!! Thrusting through SPACE...");        // float yAxis= Time.deltaTime * speed;        // transform.Translate(0,yAxis,0);
+        rb.AddRelativeForce(Vector3.up * mainThrust * Time.deltaTime);
+        if (!audioSource.isPlaying)
+        {
+            audioSource.PlayOneShot(mainEngine);
+        }
+
+        if (!mainEngineParticles.isPlaying)
+        {
+            mainEngineParticles.Play();
         }
     }
 
@@ -48,21 +70,43 @@ public class Movement : MonoBehaviour
     {
     if(Input.GetKey(KeyCode.A))
         {
-            // Debug.Log("Pressed A!! Turning Left...");
-
-            ApplyRotation(sideThrust);
+            RotateLeft();
 
         }
-
 
         else if(Input.GetKey(KeyCode.D))
         {
-        // Debug.Log("Pressed D!! Turning Right...");
-
-            ApplyRotation(-sideThrust);
+            RotateRight();
 
         }
+        else
+        {
+            rightThrusterParticles.Stop();
+            leftThrusterParticles.Stop();
+        }
 
+    }
+
+    private void RotateRight()
+    {
+        // Debug.Log("Pressed D!! Turning Right...");
+
+        if (!leftThrusterParticles.isPlaying)
+        {
+            leftThrusterParticles.Play();
+        }
+        ApplyRotation(-sideThrust);
+    }
+
+    private void RotateLeft()
+    {
+        // Debug.Log("Pressed A!! Turning Left...");
+
+        if (!rightThrusterParticles.isPlaying)
+        {
+            rightThrusterParticles.Play();
+        }
+        ApplyRotation(sideThrust);
     }
 
     void ApplyRotation(float rotationThisFrame)
